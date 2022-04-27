@@ -11,8 +11,6 @@ function delta_t = PhaseNoisePowerLaw2TIE(N, nominal_interval, S_phi_f0)
 
 % size(s_phi_f0) = [5,1].
 
-close all
-
 if(mod(N,2))
     N = N + 1;
 end
@@ -43,12 +41,13 @@ for index = 1:5
 end
 
 f = 0 : 1/((N -1) * nominal_interval) : 1/nominal_interval;
-figure;
-loglog(f, abs(S_phi.^2)*bin_bandwidth); 
-grid on;
-xlabel('Frequency / Hz');
-ylabel('Phase Noise / rad^2/Hz')
-title('Clock Difference in Phase Noise Spectrum Density')
+
+% figure;
+% loglog(f, abs(S_phi.^2)*bin_bandwidth); 
+% grid on;
+% xlabel('Frequency / Hz');
+% ylabel('Phase Noise / rad^2/Hz')
+% title('Clock Difference in Phase Noise Spectrum Density')
 
 
 phi = ((sqrt(N)*ifft(S_phi)*sqrt(bin_bandwidth)));
@@ -60,9 +59,10 @@ phi = ((sqrt(N)*ifft(S_phi)*sqrt(bin_bandwidth)));
 % disp(sqrt(sum(S_phi_f0(4:5))) / rms(phi))
 
 delta_t = phi/(2*pi*1/nominal_interval);
-figure;
-plot(delta_t);
-grid on;
-xlabel('t / s');
-ylabel('Time Fluctuation (TIE) / s')
-title('Clock Difference in Time Domain')
+
+% figure;
+% plot(delta_t);
+% grid on;
+% xlabel('t / s');
+% ylabel('Time Fluctuation (TIE) / s')
+% title('Clock Difference in Time Domain')

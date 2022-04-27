@@ -25,7 +25,8 @@ if(isempty(find(state)))
 end
 
 N = length(t);
-b = 0;
+long_tap = length(tap) > 2;     % extra xor needed if tap number > 2
+b = false;
 seq = zeros(1,N);
 rounds = 0;
 for idx = 1:N
@@ -33,7 +34,7 @@ for idx = 1:N
     rounds = floor(t(idx)*rate);
     for idx_round = 1:(rounds - last_round)
         b = xor(state(tap(1)),state(tap(2)));
-        if(length(tap > 2))
+        if(long_tap)
             for idx_tap = 3:length(tap)
                 b = xor(b, state(tap(idx_tap)));
             end
