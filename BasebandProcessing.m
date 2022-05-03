@@ -7,11 +7,24 @@ t = 1/ChipRate/nOverSample/2 : 1/ChipRate/nOverSample : (N-1/2)/ChipRate/nOverSa
 %Doppler_Removal_seq = ones(size(t));
 IQBB_doppler_remove_seq = [0 IQBB(1 : ChipLength*nOverSample - 1)];
 Costas_Product = zeros(size(t));
-Costas_Loop_Gain = 1e9;
-loop_f1 = 5e5;
-loop_f2 = 1e5;
-coef1 = pi*loop_f2*(1/ChipRate/nOverSample) + loop_f2/loop_f1;
-coef2 = pi*loop_f2*(1/ChipRate/nOverSample) - loop_f2/loop_f1;
+
+% 2nd Order Filter Parameters
+% Costas_Loop_Gain = 1e9;
+% loop_f1 = 5e5;
+% loop_f2 = 1e5;
+% coef1 = pi*loop_f2*(1/ChipRate/nOverSample) + loop_f2/loop_f1;
+% coef2 = pi*loop_f2*(1/ChipRate/nOverSample) - loop_f2/loop_f1;
+
+% 3rd Order Filter Parameters
+Costas_Loop_Gain = 1e8;
+loop_tau1 = 1e-3;
+loop_tau2 = 0.2e-4;
+coef_b0 = 1;
+coef_b1 = 2*(1/ChipRate/nOverSample)/(1/ChipRate/nOverSample + 2*loop_tau2);
+coef_b2 = (1/ChipRate/nOverSample - 2*loop_tau2)/(1/ChipRate/nOverSample + 2*loop_tau2);
+coef_a1 = 4*loop_tau1/(1/ChipRate/nOverSample + 2*loop_tau1);
+coef_a2 = (1/ChipRate/nOverSample - 2*loop_tau1)/(1/ChipRate/nOverSample + 2*loop_tau1);
+
 WTune_y_n = zeros(size(t));
 
 LFSR_INIT = [0 0 0 0 0 1];
@@ -37,7 +50,12 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
                                         imag(IQBB_seq(end)) ...
                                       ] ...
                                     );
-    WTune_y_n(ChipLength*nOverSample + idx_moving) = (WTune_y_n(ChipLength*nOverSample + idx_moving - 1) + Costas_Loop_Gain*(coef1*PDFx_n + coef2*Costas_Product(ChipLength*nOverSample + idx_moving - 1)));
+    WTune_y_n(ChipLength*nOverSample + idx_moving) = (coef_a1 * WTune_y_n(ChipLength*nOverSample + idx_moving - 1) + ...
+                                                      coef_a2 * WTune_y_n(ChipLength*nOverSample + idx_moving - 2) + ...
+                                    Costas_Loop_Gain*(coef_b0 * PDFx_n + ...
+                                                      coef_b1 * Costas_Product(ChipLength*nOverSample + idx_moving - 1) + ...
+                                                      coef_b2 * Costas_Product(ChipLength*nOverSample + idx_moving - 2) ...
+                                                  ));
 
     Costas_Product(ChipLength*nOverSample + idx_moving) = PDFx_n;
 
@@ -61,14 +79,14 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
         (imag(Integral_Early_seq(idx_moving)) - imag(Integral_Late_seq(idx_moving))) ...
                                            .*imag(Integral_Prompt_seq(idx_moving));
     if(Integral_dot(idx_moving) > 2.5e-4)
-%         figure;
-%         plot(real(IQBB_doppler_remove_seq))
-%         yyaxis right;
-%         plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
-%         yyaxis left;
-%         figure;plot(real(Doppler_Removal_seq))
-%         hold on;plot(imag(Doppler_Removal_seq))
-%         disp('Peak')
+        figure;
+        plot(real(IQBB_doppler_remove_seq))
+        yyaxis right;
+        plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
+        yyaxis left;
+        figure;plot(real(Doppler_Removal_seq))
+        hold on;plot(imag(Doppler_Removal_seq))
+        disp('Peak')
         idx_CodeReplica = idx_CodeReplica + 1;
     end
     if(idx_moving == 0)
