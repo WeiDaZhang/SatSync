@@ -16,7 +16,7 @@ Costas_Product = zeros(size(t));
 % coef2 = pi*loop_f2*(1/ChipRate/nOverSample) - loop_f2/loop_f1;
 
 % 3rd Order Filter Parameters
-Costas_Loop_Gain = 1e8;
+Costas_Loop_Gain = 1e9;
 loop_tau1 = 1e-3;
 loop_tau2 = 0.2e-4;
 coef_b0 = 1;
@@ -64,6 +64,9 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
 %    IQBB_doppler_remove_seq = IQBB_seq .* Doppler_Removal_seq(idx_moving : ChipLength*nOverSample + idx_moving - 1);
     IQBB_doppler_remove_seq = IQBB_seq .* Doppler_Removal_seq;
     
+    %% Filter for removing the image components of doppler removal is needed
+    
+    %%
     % Baseband signal Correlate with Early/Prompt/Late Code
     Correlated_Early_seq = IQBB_doppler_remove_seq .* LocalCodeReplica(idx_CodeReplica : ChipLength*nOverSample + idx_CodeReplica - 1);
     Correlated_Prompt_seq = IQBB_doppler_remove_seq .* LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica);
