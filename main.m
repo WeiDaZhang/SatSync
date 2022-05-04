@@ -24,7 +24,7 @@ plot3(0,0,0,'+')
 satellite_omega = SatelliteAngularVelocity(satellite_altitude + average_earth_radius);
 
 % Number of Point
-N = 2^22;
+N = 2^25;
 
 % Symbol Rate (Repetition Rate of the whole Spectrum Spread Code Sequence)
 SymbolRate = 1e3;
