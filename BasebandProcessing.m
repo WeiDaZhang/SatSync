@@ -58,13 +58,19 @@ title('Integral Dot Product')
 for idx_moving = 1 : (N - ChipLength*nOverSample)
     % Latest sequence of ChipRate*nOverSample samples of IQBB
     IQBB_seq = IQBB(idx_moving : ChipLength*nOverSample + idx_moving - 1);
+    
+    % IQ Mix with updated doppler removal NCO
     IQBB_doppler_remove_seq = IQBB_seq .* Doppler_Removal(idx_moving : ChipLength*nOverSample + idx_moving - 1);
+    
+    % Half Band Filter
     IQBB_doppler_remove_seq = filter(lpf_b,lpf_a,IQBB_doppler_remove_seq);
 
+    % Phase-Frequency Detector (PFD) of Costas Loop
     PDFx_n = ...
                                  sum(  real(IQBB_doppler_remove_seq(end)) ... 
                                    .*  imag(IQBB_doppler_remove_seq(end)));
 
+    % IIR Loop Filter
     WTune_y_n(ChipLength*nOverSample + idx_moving) = (coef_a1 * WTune_y_n(ChipLength*nOverSample + idx_moving - 1) + ...
                                                       coef_a2 * WTune_y_n(ChipLength*nOverSample + idx_moving - 2) + ...
                                     Costas_Loop_Gain*(coef_b0 * PDFx_n + ...
@@ -72,15 +78,12 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
                                                       coef_b2 * Costas_Product(ChipLength*nOverSample + idx_moving - 2) ...
                                                   ));
 
+    % PFD Output
     Costas_Product(ChipLength*nOverSample + idx_moving) = PDFx_n;
 
+    % Doppler Removal NCO
     Doppler_Removal(ChipLength*nOverSample + idx_moving) = exp(1j*WTune_y_n(ChipLength*nOverSample + idx_moving)*t(ChipLength*nOverSample + idx_moving));
-%    Doppler_Removal_seq = exp(1j*WTune_y_n(ChipLength*nOverSample + idx_moving)*t(idx_moving : ChipLength*nOverSample + idx_moving - 1));
-%    IQBB_doppler_remove_seq = IQBB_seq .* Doppler_Removal_seq;
-    
-    %% Filter for removing the image components of doppler removal is needed
-    
-    %%
+
     % Baseband signal Correlate with Early/Prompt/Late Code
     Correlated_Early_seq = IQBB_doppler_remove_seq .* LocalCodeReplica(idx_CodeReplica : ChipLength*nOverSample + idx_CodeReplica - 1);
     Correlated_Prompt_seq = IQBB_doppler_remove_seq .* LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica);
@@ -95,6 +98,8 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
                                            .*real(Integral_Prompt_seq(idx_moving)) + ...
         (imag(Integral_Early_seq(idx_moving)) - imag(Integral_Late_seq(idx_moving))) ...
                                            .*imag(Integral_Prompt_seq(idx_moving));
+
+    % Chip Lock Detection
     if((Integral_dot(idx_moving) > CodeLockThreshold) && (idx_moving > 1))
         if(Integral_dot(idx_moving - 1) < CodeLockThreshold)
             figure(h1);
