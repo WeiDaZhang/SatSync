@@ -26,7 +26,7 @@ lpf_a = [1.000 -2.026 2.148 -1.159 0.279];
 % coef_a2 = 0;
 
 % 3rd Order Filter Parameters
-Costas_Loop_Gain = 1e7;
+Costas_Loop_Gain = 1e7;%locks
 loop_tau1 = 1e-3;
 loop_tau2 = 0.2e-4;
 coef_b0 = 1;
@@ -101,6 +101,7 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
             plot(imag(IQBB_doppler_remove_seq))
             yyaxis right;
             plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
+            ylim([-2 2])
             yyaxis left;
             
             figure(h2);plot(real(Doppler_Removal))
@@ -124,6 +125,7 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
             plot(imag(IQBB_doppler_remove_seq))
             yyaxis right;
             plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
+            ylim([-2 2])
             yyaxis left;
             
             figure(h2);plot(real(Doppler_Removal))
