@@ -16,19 +16,23 @@ lpf_a = [1.000 -2.026 2.148 -1.159 0.279];
 
 
 % 2nd Order Filter Parameters
-% Costas_Loop_Gain = 1e9;
+% Costas_Loop_Gain = 1e7;
 % loop_f1 = 5e5;
-% loop_f2 = 1e5;
+% loop_f2 = 1e6;
 % coef_b0 = 1;
 % coef_b1 = pi*loop_f2*(1/ChipRate/nOverSample) + loop_f2/loop_f1;
 % coef_b2 = pi*loop_f2*(1/ChipRate/nOverSample) - loop_f2/loop_f1;
 % coef_a1 = 1;
 % coef_a2 = 0;
 
-% 3rd Order Filter Parameters
-Costas_Loop_Gain = 1e7;%locks
-loop_tau1 = 1e-3;
-loop_tau2 = 0.2e-4;
+% 3rd Order Filter Parameters locks
+% Costas_Loop_Gain = 1e7;
+% loop_tau1 = 1e-4;
+% loop_tau2 = 0.2e-5;
+
+Costas_Loop_Gain = 1e7;
+loop_tau1 = 1e-5;
+loop_tau2 = 2e-6;
 coef_b0 = 1;
 coef_b1 = 2*(1/ChipRate/nOverSample)/(1/ChipRate/nOverSample + 2*loop_tau2);
 coef_b2 = (1/ChipRate/nOverSample - 2*loop_tau2)/(1/ChipRate/nOverSample + 2*loop_tau2);
@@ -102,66 +106,62 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
     % Chip Lock Detection
     if((Integral_dot(idx_moving) > CodeLockThreshold) && (idx_moving > 1))
         if(Integral_dot(idx_moving - 1) < CodeLockThreshold)
-            figure(h1);
-            plot(imag(IQBB_doppler_remove_seq))
-            yyaxis right;
-            plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
-            ylim([-2 2])
-            yyaxis left;
             
-            figure(h2);plot(real(Doppler_Removal))
-            hold on;plot(imag(Doppler_Removal))
-            
-            figure(h3);
-            plot(Costas_Product);
-            yyaxis right
-            plot(WTune_y_n);
-            yyaxis left
-            
-            figure(h4);
-            plot((Integral_dot));
-            disp('Peak')
+            plot_graphs(h1, h2, h3, h4, IQBB_doppler_remove_seq, LocalCodeReplica, ...
+                     idx_CodeReplica, ChipLength, nOverSample, Doppler_Removal, ...
+                     Costas_Product, WTune_y_n, Integral_dot)
+            disp('Peak-Start')
         end
         idx_CodeReplica = idx_CodeReplica + 1;
     end
     if((Integral_dot(idx_moving) < CodeLockThreshold) && (idx_moving > 1))
         if(Integral_dot(idx_moving - 1) > CodeLockThreshold)
-            figure(h1);
-            plot(imag(IQBB_doppler_remove_seq))
-            yyaxis right;
-            plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
-            ylim([-2 2])
-            yyaxis left;
-            
-            figure(h2);plot(real(Doppler_Removal))
-            hold on;plot(imag(Doppler_Removal))
-            
-            figure(h3);
-            plot(Costas_Product);
-            yyaxis right
-            plot(WTune_y_n);
-            yyaxis left
-            
-            figure(h4);
-            plot((Integral_dot));
-            disp('Peak')
+
+            plot_graphs(h1, h2, h3, h4, IQBB_doppler_remove_seq, LocalCodeReplica, ...
+                     idx_CodeReplica, ChipLength, nOverSample, Doppler_Removal, ...
+                     Costas_Product, WTune_y_n, Integral_dot)
+            disp('Peak-End')
         end
     end
     if(idx_moving == 0)
-        figure;
-        plot(imag(IQBB_doppler_remove_seq))
-        yyaxis right;
-        plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica))
-        yyaxis left;
-        figure;plot(real(Doppler_Removal))
-        hold on;plot(imag(Doppler_Removal))
-        disp('Stopped')
+        plot_graphs(h1, h2, h3, h4, IQBB_doppler_remove_seq, LocalCodeReplica, ...
+                     idx_CodeReplica, ChipLength, nOverSample, Doppler_Removal, ...
+                     Costas_Product, WTune_y_n, Integral_dot)
+        disp('Pause')
     end
 end
-figure(h3);
-plot(Costas_Product)
-yyaxis right
-plot(WTune_y_n)
 
-figure(h4);plot((Integral_dot));
+plot_graphs(h1, h2, h3, h4, IQBB_doppler_remove_seq, LocalCodeReplica, ...
+                     idx_CodeReplica, ChipLength, nOverSample, Doppler_Removal, ...
+                     Costas_Product, WTune_y_n, Integral_dot)
 disp('End')
+end
+
+function plot_graphs(h1, h2, h3, h4, IQBB_doppler_remove_seq, LocalCodeReplica, ...
+                     idx_CodeReplica, ChipLength, nOverSample, Doppler_Removal, ...
+                     Costas_Product, WTune_y_n, Integral_dot)
+    figure(h1);
+    plot(imag(IQBB_doppler_remove_seq));
+    yyaxis right;
+    plot(LocalCodeReplica(idx_CodeReplica + 1 : ChipLength*nOverSample + idx_CodeReplica));
+    ylim([-2 2]);
+    yyaxis left;
+    title('Code Sequence');
+
+    figure(h2);
+    plot(real(Doppler_Removal));
+    hold on;
+    plot(imag(Doppler_Removal));
+    title('Doppler Signal')
+
+    figure(h3);
+    plot(Costas_Product);
+    yyaxis right;
+    plot(WTune_y_n);
+    yyaxis left;
+    title('PDFx_n');
+
+    figure(h4);
+    plot((Integral_dot));
+    title('Integral Dot Product');
+end
