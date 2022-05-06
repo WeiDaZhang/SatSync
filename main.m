@@ -24,7 +24,7 @@ plot3(0,0,0,'+')
 satellite_omega = SatelliteAngularVelocity(satellite_altitude + average_earth_radius);
 
 % Number of Point
-N = 2^25;
+N = 2^22;
 
 % Symbol Rate (Repetition Rate of the whole Spectrum Spread Code Sequence)
 SymbolRate = 1e3;
@@ -39,7 +39,7 @@ LFSR_POL = [10 7];
 ChipRate = ChipLength * SymbolRate;
 
 % Oversampling Rate (How many samples each chip duration)
-nOverSample = 8;
+nOverSample = 6;
 
 % Signal Carrier frequency
 % For simplicity f0 should be (integer + 1/4) multiple of (Chip Rate) * (Over Sample)
@@ -71,13 +71,24 @@ plot3(x,y,z)
 % Satellite-Ground Station Range
 sqr_R = ([(x - x0)',(y - y0)',(z - z0)']).^2;
 range_x = sqrt(sum(sqr_R,2))';
+
+clear x y z sqr_R
+
+% Creating Obvious Fluctuation
+range_vary = sin(2*pi*2*(0: 1/N :(N-1)/N)) * mean(range_x)/10000;
+range_x = range_x + range_vary;
+
+% Using Constant Range
 % range_x = 1e6;
-% figure;plot(range_x)
+
+figure;plot(-diff(range_x))
 
 % Received Power
 link_loss = 20*log10(4*pi*range_x/lambda0);
 received_power = p0dBm - link_loss;
 received_amp = sqrt(10.^(received_power/10)*50);
+
+clear link_loss received_power
 
 LFSR_INIT = [0 0 0 0 0 1];
 ChipCode_b = LFSR_t(t_prime - range_x/c, ChipRate, LFSR_INIT, LFSR_POL, ChipLength);
@@ -85,10 +96,15 @@ ChipCode_b = LFSR_t(t_prime - range_x/c, ChipRate, LFSR_INIT, LFSR_POL, ChipLeng
 received_r = received_amp.*sin(w0*t_prime - k0*range_x + ChipCode_b*pi/2);
 % figure;plot(abs(fft(received_r)))
 
+clear t received_amp ChipCode_b
+%% Save memory
+clear t_prime range_x
+
 IQBB = RF_FrontEnd(received_r, ChipRate, nOverSample);
 
-figure;plot(abs(fft(IQBB)));
-figure;plot(real(IQBB));
-figure;plot(imag(IQBB));
+clear received_r
+% figure;plot(abs(fft(IQBB)));
+% figure;plot(real(IQBB));
+% figure;plot(imag(IQBB));
 
 BasebandProcessing(IQBB, ChipLength, ChipRate, nOverSample, LFSR_POL)
