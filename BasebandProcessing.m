@@ -11,9 +11,7 @@ WTune_y_n = zeros(size(t));
 Doppler_Removal = ones(size(t));
 
 % Low Pass Filter
-lpf_b = [0.028  0.053 0.071  0.053 0.028];
-lpf_a = [1.000 -2.026 2.148 -1.159 0.279];
-
+lpf_b = fir1(14, 1/nOverSample);
 
 % 2nd Order Filter Parameters
 % Costas_Loop_Gain = 1e7;
@@ -31,8 +29,8 @@ lpf_a = [1.000 -2.026 2.148 -1.159 0.279];
 % loop_tau2 = 0.2e-5;
 
 Costas_Loop_Gain = 1e7;
-loop_tau1 = 1e-5;
-loop_tau2 = 2e-6;
+loop_tau1 = 1e-7;
+loop_tau2 = 2e-8;
 coef_b0 = 1;
 coef_b1 = 2*(1/ChipRate/nOverSample)/(1/ChipRate/nOverSample + 2*loop_tau2);
 coef_b2 = (1/ChipRate/nOverSample - 2*loop_tau2)/(1/ChipRate/nOverSample + 2*loop_tau2);
@@ -67,7 +65,8 @@ for idx_moving = 1 : (N - ChipLength*nOverSample)
     IQBB_doppler_remove_seq = IQBB_seq .* Doppler_Removal(idx_moving : ChipLength*nOverSample + idx_moving - 1);
     
     % Half Band Filter
-    IQBB_doppler_remove_seq = filter(lpf_b,lpf_a,IQBB_doppler_remove_seq);
+    IQBB_doppler_remove_seq = filter(lpf_b,1,IQBB_doppler_remove_seq);
+    %figure;plot(db(abs(fft(IQBB_doppler_remove_seq))))
 
     % Phase-Frequency Detector (PFD) of Costas Loop
     PDFx_n = ...
